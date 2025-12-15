@@ -1368,8 +1368,8 @@
       initializeChats();
       renderChatCards();
       
-      // Check for new messages every 2 seconds
-      setInterval(fetchNewMessages, 2000);
+      // Check for new messages every 1 second
+      setInterval(fetchNewMessages, 1000);
       
       // Check for notifications every 5 seconds
       setInterval(checkNotifications, 5000);
@@ -2194,6 +2194,7 @@
     // Process new messages
     function processNewMessages(messages) {
       let hasNewRequests = false;
+      let needsCardUpdate = false; // NEW: Track if cards need updating
       
       messages.forEach(row => {
         if (!row || row.length < 4) return;
@@ -2258,11 +2259,13 @@
                 };
                 
                 showRequestNotification(message.sender, message.text);
+                needsCardUpdate = true; // Cards need update
               } else {
                 const requestChat = state.chats[requestId];
                 requestChat.messages.push(message);
                 requestChat.lastActivity = message.timestamp;
                 requestChat.unread++;
+                needsCardUpdate = true; // Cards need update
               }
             } else {
               console.log('Message blocked by privacy settings from:', message.sender);
@@ -2288,6 +2291,9 @@
           if (!existingMessage) {
             chat.messages.push(message);
             chat.lastActivity = message.timestamp;
+
+            // Mark that cards need update
+            needsCardUpdate = true;
             
             if (chatId !== state.currentChat) {
               chat.unread++;
@@ -2300,7 +2306,11 @@
       // Update requests badge
       if (hasNewRequests) {
         updateRequestsBadge();
-        renderChatCards();
+      }
+
+       // NEW: Update chat cards if needed
+       if (needsCardUpdate) {
+       renderChatCards();
       }
       
       // If current chat is active, reload messages
