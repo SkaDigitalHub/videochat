@@ -983,6 +983,20 @@
       .sidebar.active {
         left: 0;
       }
+
+        /* FIX: Show sidebar content when active on mobile */
+  .sidebar.active .profile-info {
+    display: block;
+  }
+  
+  .sidebar.active .settings-menu {
+    display: flex;
+  }
+  
+  /* FIX: Ensure expanded class doesn't interfere on mobile */
+  .sidebar.expanded {
+    width: 250px; /* Keep width */
+  }
       
       .cards-container {
         grid-template-columns: 1fr;
