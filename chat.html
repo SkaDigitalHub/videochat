@@ -1833,18 +1833,17 @@
         elements.currentChatSubtitle.textContent = 'Group • ' + (chat.name === 'Global Chat' ? '8 members' : '3 members');
       } else if (chat.isRequest) {
         elements.currentChatSubtitle.textContent = 'Message Request • Tap to view';
+     } else if (chat.isTemporary) {
+    elements.currentChatSubtitle.textContent = 'Tap to add to contacts';
       } else {
         elements.currentChatSubtitle.textContent = 'Online';
       }
       
-      // Enable/disable input
-      const isRegularChat = !chat.isRequest && chat.type !== 'request';
-      elements.messageInput.disabled = !isRegularChat;
-      elements.sendBtn.disabled = !isRegularChat;
-      
-      if (isRegularChat) {
-        elements.messageInput.focus();
-      }
+        // Enable input
+       elements.messageInput.disabled = false;
+       elements.sendBtn.disabled = false;
+       elements.messageInput.focus();
+  
       
       // Clear unread count
       chat.unread = 0;
@@ -1866,6 +1865,12 @@
 
     // Close chat view
     function closeChatView() {
+        const currentChat = state.chats[state.currentChat];
+
+  if (currentChat && currentChat.isTemporary && (!currentChat.messages || currentChat.messages.length === 0)) {
+    delete state.chats[state.currentChat];
+    renderChatCards(); // Update the card list
+  }
       state.currentChat = null;
       elements.chatView.classList.remove('active');
       
@@ -1878,6 +1883,53 @@
       });
     }
 
+    // Add CSS for clickable usernames (add this to your CSS):
+const clickableUsernameCSS = `
+.clickable-username {
+  cursor: pointer !important;
+  transition: opacity 0.2s !important;
+}
+
+.clickable-username:hover {
+  opacity: 0.8 !important;
+}
+
+/* Style for username options in chat header */
+.username-actions {
+  display: flex;
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.username-action-btn {
+  padding: 3px 8px;
+  font-size: 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.username-action-btn:hover {
+  opacity: 0.9;
+}
+
+.username-action-btn.add {
+  background: var(--online-status);
+  color: white;
+}
+
+.username-action-btn.chat {
+  background: var(--primary-color);
+  color: white;
+}
+`;
+
+// Inject the CSS
+const style = document.createElement('style');
+style.textContent = clickableUsernameCSS;
+document.head.appendChild(style);
+
     // Load chat messages
     function loadChatMessages() {
       if (!elements.messagesContainer) return;
@@ -1885,6 +1937,33 @@
       elements.messagesContainer.innerHTML = '';
       
       const chat = state.chats[state.currentChat];
+
+        // Add "Add to Contacts" button for temporary chats
+  if (chat.isTemporary && chat.type === 'individual') {
+    const addContactHeader = document.createElement('div');
+    addContactHeader.className = 'temporary-chat-header';
+    addContactHeader.style.background = 'var(--card-bg)';
+    addContactHeader.style.padding = '15px';
+    addContactHeader.style.borderRadius = '10px';
+    addContactHeader.style.marginBottom = '20px';
+    addContactHeader.style.textAlign = 'center';
+    addContactHeader.style.border = '1px solid var(--border-color)';
+    
+    addContactHeader.innerHTML = `
+      <p style="margin-bottom: 10px; color: var(--text-secondary);">
+        You're chatting with <strong>${chat.name}</strong> who is not in your contacts
+      </p>
+      <button onclick="addUserToContacts('${chat.name}')" 
+              style="background: var(--online-status); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;">
+        <i class="fas fa-user-plus" style="margin-right: 5px;"></i>
+        Add to Contacts
+      </button>
+    `;
+    
+    elements.messagesContainer.appendChild(addContactHeader);
+  }
+
+  // Rest of the existing loadChatMessages code...
       if (!chat || !chat.messages || chat.messages.length === 0) {
         if (chat && chat.isRequest) {
           // Show request view
@@ -1957,21 +2036,209 @@
       const time = formatMessageTime(message.timestamp);
       
       const chat = state.chats[state.currentChat];
-      if (message.sender !== state.currentUser && chat && chat.type === 'group') {
-        div.innerHTML = `
-          <div class="message-sender">${message.sender}</div>
-          <div class="message-text">${escapeHtml(message.text)}</div>
-          <div class="message-time">${time}</div>
-        `;
-      } else {
-        div.innerHTML = `
-          <div class="message-text">${escapeHtml(message.text)}</div>
-          <div class="message-time">${time}</div>
-        `;
-      }
-      
-      return div;
-    }
+        // Check if this is a group chat and message is from someone else
+  const isGroupChat = chat && chat.type === 'group';
+  const isOtherUser = message.sender !== state.currentUser;
+  
+  if (isGroupChat && isOtherUser) {
+    // Create clickable username
+    const usernameSpan = document.createElement('span');
+    usernameSpan.className = 'message-sender clickable-username';
+    usernameSpan.textContent = message.sender;
+    usernameSpan.dataset.username = message.sender;
+    usernameSpan.title = `Click to chat with ${message.sender}`;
+    usernameSpan.style.cursor = 'pointer';
+    usernameSpan.style.color = getColorFromString(message.sender);
+    usernameSpan.style.textDecoration = 'underline';
+    usernameSpan.style.transition = 'opacity 0.2s';
+    
+    usernameSpan.addEventListener('mouseenter', () => {
+      usernameSpan.style.opacity = '0.8';
+    });
+    
+    usernameSpan.addEventListener('mouseleave', () => {
+      usernameSpan.style.opacity = '1';
+    });
+    
+    usernameSpan.addEventListener('click', (e) => {
+      e.stopPropagation();
+      handleUsernameClick(message.sender);
+    });
+    
+    div.innerHTML = `
+      <div class="message-text">${escapeHtml(message.text)}</div>
+      <div class="message-time">${time}</div>
+    `;
+    
+    // Insert username at the beginning
+    div.insertBefore(usernameSpan, div.firstChild);
+  } else {
+    // Regular message
+    div.innerHTML = `
+      <div class="message-text">${escapeHtml(message.text)}</div>
+      <div class="message-time">${time}</div>
+    `;
+  }
+  
+  return div;
+}
+
+// Add this function to handle username clicks:
+function handleUsernameClick(username) {
+  // Don't allow clicking on yourself
+  if (username === state.currentUser) {
+    showToast('That\'s you!', 'info');
+    return;
+  }
+  
+  // Check if user is blocked
+  if (state.blockedUsers.includes(username)) {
+    showToast(`${username} is blocked`, 'warning');
+    return;
+  }
+  
+  // Check if user already exists in contacts
+  const isInContacts = state.users.includes(username) || state.userContacts.includes(username);
+  
+  if (isInContacts) {
+    // User is in contacts - open chat or switch to existing chat
+    openChatWithUser(username);
+  } else {
+    // User not in contacts - show options
+    showUsernameOptions(username);
+  }
+}
+
+
+// Add this function to open chat with user:
+function openChatWithUser(username) {
+  // Check if chat already exists
+  if (state.chats[username]) {
+    // Switch to existing chat
+    closeChatView(); // Close current chat view first
+    setTimeout(() => {
+      openChatView(username);
+    }, 100);
+  } else {
+    // Create new chat
+    state.chats[username] = {
+      id: username,
+      name: username,
+      type: 'individual',
+      messages: [],
+      lastActivity: null,
+      unread: 0
+    };
+    
+    // Switch to new chat
+    closeChatView(); // Close current chat view first
+    setTimeout(() => {
+      openChatView(username);
+      showToast(`Started chat with ${username}`, 'success');
+    }, 100);
+  }
+}
+
+ // Add this function to show options for unknown users:
+function showUsernameOptions(username) {
+  // Create modal for username options
+  const modalHTML = `
+    <div class="modal-overlay active" id="username-options-modal">
+      <div class="modal-content">
+        <h2 class="modal-title">${username}</h2>
+        <p style="text-align: center; margin-bottom: 20px; color: var(--text-secondary);">
+          This user is not in your contacts
+        </p>
+        
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <button class="modal-btn primary" onclick="addUserToContacts('${username}')">
+            <i class="fas fa-user-plus" style="margin-right: 8px;"></i>
+            Add to Contacts & Chat
+          </button>
+          
+          <button class="modal-btn" onclick="chatWithoutAdding('${username}')" style="background: var(--message-received);">
+            <i class="fas fa-comment" style="margin-right: 8px;"></i>
+            Chat Without Adding
+          </button>
+          
+          <button class="modal-btn secondary" onclick="closeUsernameOptions()">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  // Create and show modal
+  const modalContainer = document.createElement('div');
+  modalContainer.innerHTML = modalHTML;
+  document.body.appendChild(modalContainer);
+}
+
+// Add this function to add user to contacts and chat:
+function addUserToContacts(username) {
+  // Add to contacts
+  if (!state.users.includes(username)) {
+    state.users.push(username);
+  }
+  
+  if (!state.userContacts.includes(username)) {
+    state.userContacts.push(username);
+    localStorage.setItem('chatAppContacts', JSON.stringify(state.userContacts));
+  }
+  
+  // Create chat
+  state.chats[username] = {
+    id: username,
+    name: username,
+    type: 'individual',
+    messages: [],
+    lastActivity: null,
+    unread: 0
+  };
+  
+  // Close modal
+  closeUsernameOptions();
+  
+  // Switch to chat
+  closeChatView();
+  setTimeout(() => {
+    openChatView(username);
+    showToast(`${username} added to contacts`, 'success');
+  }, 100);
+}
+
+ // Add this function to chat without adding to contacts:
+function chatWithoutAdding(username) {
+  // Create temporary chat (not saved to contacts)
+  state.chats[username] = {
+    id: username,
+    name: username,
+    type: 'individual',
+    messages: [],
+    lastActivity: null,
+    unread: 0,
+    isTemporary: true // Mark as temporary
+  };
+  
+  // Close modal
+  closeUsernameOptions();
+  
+  // Switch to chat
+  closeChatView();
+  setTimeout(() => {
+    openChatView(username);
+    showToast(`Started chat with ${username}`, 'info');
+  }, 100);
+}
+
+// Add this function to close username options modal:
+function closeUsernameOptions() {
+  const modal = document.getElementById('username-options-modal');
+  if (modal) {
+    modal.remove();
+  }
+}
 
     // Get last message preview
     function getLastMessagePreview(chat) {
