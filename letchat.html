@@ -1200,6 +1200,41 @@
   display: none;
 }
 
+/* Clickable reply indicator */
+.reply-to-indicator.clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.reply-to-indicator.clickable:hover {
+  background: rgba(0, 132, 255, 0.2);
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(0, 132, 255, 0.2);
+}
+
+.reply-to-indicator.clickable:active {
+  transform: translateX(2px);
+}
+
+/* Non-clickable reply indicator */
+.reply-to-indicator:not(.clickable) {
+  cursor: default;
+  opacity: 0.8;
+}
+
+.reply-to-indicator:not(.clickable) .reply-sender-name {
+  opacity: 0.7;
+}
+
+.reply-to-indicator:not(.clickable)::before {
+  animation: none;
+}
+
+.reply-to-indicator:not(.clickable):hover {
+  background: rgba(0, 132, 255, 0.1);
+  transform: none;
+}
+
 /* Message with Reply - Enhanced Styling */
 .message.has-reply {
   margin-top: 5px;
@@ -1766,7 +1801,6 @@
       },
       currentSection: 'chats',
       activeRequestId: null,
-      // Add these new properties:
       currentReply: null, // {messageId, sender, text}
       currentForwardMessage: null, // {messageId, sender, text}
       replyMode: false,
@@ -2509,7 +2543,10 @@ document.head.appendChild(style);
   
   const time = formatMessageTime(message.timestamp);
   const messageId = message.localId || Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-  
+      // Store the message ID for later reference
+  message.localId = messageId; // Ensure localId exists
+  div.dataset.messageId = messageId; // Use the actual message ID
+
   // Create message actions
   const messageActions = document.createElement('div');
   messageActions.className = 'message-actions';
@@ -2532,10 +2569,17 @@ document.head.appendChild(style);
   
   let messageContent = '';
   
-  // Add reply indicator with this better version:
+// Replace the reply indicator HTML creation with this:
 if (message.isReply && message.replyTo) {
+  const canJumpToOriginal = message.replyTo.messageId && 
+                           (chat.type !== 'group' || message.replyTo.sender === state.currentUser || 
+                            message.sender === message.replyTo.sender);
+  
+  const indicatorClass = canJumpToOriginal ? 'reply-to-indicator clickable' : 'reply-to-indicator';
+  const titleText = canJumpToOriginal ? 'Click to jump to original message' : 'Reply to another message';
+  
   messageContent += `
-    <div class="reply-to-indicator" onclick="scrollToReply('${message.replyTo.messageId}')" title="Click to jump to original message">
+    <div class="${indicatorClass}" ${canJumpToOriginal ? `onclick="scrollToReply('${message.replyTo.messageId}', '${escapeHtml(message.replyTo.sender)}')"` : ''} title="${titleText}">
       <i class="fas fa-reply"></i>
       <span class="reply-sender-name">${escapeHtml(message.replyTo.sender)}</span>
       <span class="reply-preview-text">
@@ -2611,17 +2655,44 @@ if (message.isReply && message.replyTo) {
 }
 
 // Add this function to scroll to original message
-function scrollToReply(messageId) {
-  const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
-  if (messageElement) {
-    messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    messageElement.classList.add('reply-highlight');
-    setTimeout(() => {
-      messageElement.classList.remove('reply-highlight');
-    }, 2000);
-  } else {
-    showToast('Original message not found in current view', 'info');
+// Smart scroll to reply - only works within current chat
+function scrollToReply(messageId, originalSender) {
+  const currentChat = state.chats[state.currentChat];
+  if (!currentChat) return;
+  
+  // Check if this reply is within the current chat
+   console.log('Looking for message ID:', messageId);
+  console.log('Available message IDs:', currentChat.messages.map(m => m.localId));
+  
+  // Find the original message in current chat
+  const originalMessage = currentChat.messages.find(msg => 
+    msg.localId === messageId || 
+    msg.replyTo?.messageId === messageId
+  );
+
+  if (originalMessage) {
+    console.log('Found original message:', originalMessage);
+    // Find the message element in DOM
+    const messageElement = document.querySelector(`[data-message-id="${originalMessage.localId}"]`);
+    
+    if (messageElement) {
+         console.log('Found DOM element, scrolling...');
+      // Scroll to and highlight the message
+      messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      messageElement.classList.add('reply-highlight');
+      
+      // Remove highlight after animation
+      setTimeout(() => {
+        messageElement.classList.remove('reply-highlight');
+      }, 2000);
+      
+      return;
+    }
   }
+  
+  // If we get here, the original message isn't in current chat
+    console.log('Original message not found, showing toast');
+  showToast(`Original message by ${originalSender} not found in this chat`, 'info');
 }
 
 // Add this function to handle username clicks:
@@ -3040,6 +3111,10 @@ function closeUsernameOptions() {
         text: originalText,
         timestamp: message.timestamp // Use same timestamp for now
       };
+        // Ensure localId exists for this message too
+  if (!message.localId) {
+    message.localId = Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+  }
     }
        
         // Skip messages from current user that we just sent
@@ -3550,7 +3625,7 @@ function setupReply(messageId, sender, text) {
   const safeText = escapeHtml(text.substring(0, 100)); // Limit length
 
   state.currentReply = {
-    messageId,
+    messageId: messageId,
     sender,
     text,
     timestamp: new Date().toISOString()
@@ -3868,6 +3943,27 @@ function closeMessageActionsModal() {
   selectedForwardChat = null;
   state.forwardMode = false;
   document.getElementById('send-forward-btn').disabled = true;
+}
+
+// Helper to check if reply can be jumped to
+function canJumpToReply(replyMessage, currentChat) {
+  if (!replyMessage || !replyMessage.replyTo || !currentChat) return false;
+  
+  // Reply must be in the same chat
+  const isSameChat = replyMessage.replyTo.messageId && 
+                    currentChat.messages.some(msg => 
+                      msg.localId === replyMessage.replyTo.messageId
+                    );
+  
+  // For group chats, additional checks
+  if (currentChat.type === 'group') {
+    return isSameChat && 
+           (replyMessage.replyTo.sender === state.currentUser || 
+            replyMessage.sender === replyMessage.replyTo.sender);
+  }
+  
+  // For individual chats
+  return isSameChat;
 }
   </script>
 </body>
