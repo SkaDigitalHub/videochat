@@ -1593,6 +1593,271 @@
   margin: 4px 0;
 }
 
+/* ========== MESSAGE REACTIONS ========== */
+
+/* Reaction container */
+.message-reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  max-width: 250px;
+  min-height: 32px;
+}
+
+/* Individual reaction */
+.reaction {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: var(--card-bg);
+  border-radius: 15px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  user-select: none;
+}
+
+.reaction:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.reaction.active {
+  background: rgba(0, 132, 255, 0.15);
+  border-color: var(--primary-color);
+}
+
+.reaction-emoji {
+  font-size: 14px;
+}
+
+.reaction-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  min-width: 12px;
+}
+
+/* Sent message reactions */
+.message.sent .message-reactions {
+  align-self: flex-end;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Reaction picker */
+.reaction-picker {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--sidebar-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
+  padding: 8px;
+  display: flex;
+  gap: 6px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+}
+
+.reaction-picker.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(-5px);
+}
+
+.reaction-option {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.reaction-option:hover {
+  background: var(--hover-color);
+  transform: scale(1.2);
+}
+
+/* Reaction animation */
+@keyframes reactionPop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.reaction.added {
+  animation: reactionPop 0.3s ease;
+}
+
+/* Quick reactions bar */
+/* Add this to your CSS section */
+.reaction-picker {
+  position: absolute;
+  background: var(--sidebar-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 8px;
+  display: flex;
+  gap: 6px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.reaction-picker.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.reaction-option {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.reaction-option:hover {
+  background: var(--hover-color);
+  transform: scale(1.2);
+}
+
+.quick-reactions {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.message:hover .quick-reactions {
+  opacity: 1;
+}
+
+.quick-reaction-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quick-reaction-btn:hover {
+  background: var(--hover-color);
+  transform: scale(1.1);
+}
+
+/* Reaction summary modal */
+.reaction-details-modal .modal-content {
+  max-width: 400px;
+}
+
+.reaction-detail-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 15px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.reaction-detail-item:last-child {
+  border-bottom: none;
+}
+
+.reaction-detail-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.reaction-detail-emoji {
+  font-size: 20px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card-bg);
+  border-radius: 50%;
+}
+
+.reaction-detail-name {
+  font-weight: 500;
+}
+
+.reaction-detail-time {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .reaction-picker {
+    padding: 6px;
+    gap: 4px;
+  }
+  
+  .reaction-option {
+    width: 28px;
+    height: 28px;
+    font-size: 16px;
+  }
+  
+  .reaction {
+    padding: 2px 6px;
+    font-size: 12px;
+  }
+  
+  .quick-reactions {
+    opacity: 1; /* Always show on mobile */
+  }
+}
+
+/* Dark mode adjustments */
+.message.received .reaction.active {
+  background: rgba(0, 132, 255, 0.1);
+}
+
+.message.sent .reaction.active {
+  background: rgba(255, 255, 255, 0.15);
+}
+
     /* Responsive Design */
     @media (max-width: 768px) {
       .sidebar {
@@ -1958,6 +2223,22 @@
       replyMode: false,
       forwardMode: false
     };
+
+    // Reaction Configuration
+const REACTIONS = {
+  '👍': { name: 'like', color: '#0084ff' },
+  '❤️': { name: 'love', color: '#f02849' },
+  '😂': { name: 'laugh', color: '#ff9500' },
+  '😮': { name: 'wow', color: '#ff9500' },
+  '😢': { name: 'sad', color: '#ff9500' },
+  '😡': { name: 'angry', color: '#ff9500' },
+  '🎉': { name: 'celebration', color: '#31a24c' },
+  '👏': { name: 'clap', color: '#0084ff' },
+  '🙌🏽': { name: 'thanks', color: '#0084ff' },
+  '🔥': { name: 'fire', color: '#ff9500' }
+};
+
+const QUICK_REACTIONS = ['🙌🏽', '👍', '❤️', '😂', '🔥', '😮', '🎉'];
 
     // DOM Elements
     const elements = {
@@ -2648,8 +2929,11 @@ document.head.appendChild(style);
           lastDate = messageDate;
         }
         
-        const messageElement = createMessageElement(message);
-        elements.messagesContainer.appendChild(messageElement);
+         // Load saved reactions for this message
+  const messageWithReactions = loadSavedReactions(message);
+  
+  const messageElement = createMessageElement(messageWithReactions);
+  elements.messagesContainer.appendChild(messageElement);
       });
       
       scrollToBottom();
@@ -2694,6 +2978,12 @@ setTimeout(() => {
 
     // Create message element
     function createMessageElement(message) {
+
+        // Skip rendering if it's a reaction message
+  if (message.isReactionMessage) {
+    return document.createElement('div'); // Return empty div
+  }
+
   const div = document.createElement('div');
   const isSent = message.sender === state.currentUser;
   div.className = `message ${isSent ? 'sent' : 'received'}`;
@@ -2704,10 +2994,20 @@ setTimeout(() => {
   message.localId = messageId; // Ensure localId exists
   div.dataset.messageId = messageId; // Use the actual message ID
 
+  // Ensure message has reactions object
+  message.reactions = message.reactions || {};
+  
+  // Create reaction elements
+  const reactionsHTML = createReactionElement(message);
+  
+
   // Create message actions
   const messageActions = document.createElement('div');
   messageActions.className = 'message-actions';
   messageActions.innerHTML = `
+   <button class="message-action-btn" title="React" onclick="event.stopPropagation(); toggleReactionPicker('${messageId}', this)">
+    <i class="fas fa-smile"></i>
+  </button>
     <button class="message-action-btn" title="Reply" onclick="event.stopPropagation(); setupReply('${messageId}', '${escapeHtml(message.sender)}', '${escapeHtml(message.text)}')">
       <i class="fas fa-reply"></i>
     </button>
@@ -2775,11 +3075,12 @@ if (message.isReply && message.replyTo) {
     // Parse text for clickable links and phone numbers
     const parsedText = parseAndLinkify(message.text);
     
-div.innerHTML = `
-  ${messageContent}
-  <div class="message-text">${parsedText}</div>
-  <div class="message-time">${time}</div>
-`;
+ div.innerHTML = `
+    ${messageContent}
+    <div class="message-text">${parsedText}</div>
+    ${reactionsHTML}
+    <div class="message-time">${time}</div>
+  `;
     
     // Insert username and actions
     div.insertBefore(usernameSpan, div.firstChild);
@@ -2787,11 +3088,14 @@ div.innerHTML = `
     
   } else {
     // Regular message with actions
+    const parsedText = parseAndLinkify(message.text);
+
     div.innerHTML = `
-      ${messageContent}
-      <div class="message-text">${escapeHtml(message.text)}</div>
-      <div class="message-time">${time}</div>
-    `;
+    ${messageContent}
+    <div class="message-text">${parsedText}</div>
+    ${reactionsHTML}
+    <div class="message-time">${time}</div>
+  `;
     div.appendChild(messageActions);
   }
   
@@ -3205,7 +3509,13 @@ function closeUsernameOptions() {
     receiver: state.currentChat === 'Global Chat' ? 'GROUP' : state.currentChat,
     message: text,
     timestamp: new Date().toISOString(),
-    localId: messageId
+    localId: messageId,
+     sharedId: createSharedMessageId({ // ADD THIS
+    timestamp: new Date().toISOString(),
+    sender: state.currentUser,
+    receiver: state.currentChat === 'Global Chat' ? 'GROUP' : state.currentChat,
+    text: text
+  })
   };
   
   console.log('Sending message with ID:', messageId);
@@ -3224,7 +3534,8 @@ function closeUsernameOptions() {
       receiver: state.currentChat,
       text: text,
       timestamp: message.timestamp,
-      localId: messageId
+      localId: messageId,
+      sharedId: message.sharedId 
     });
     chat.lastActivity = message.timestamp;
     
@@ -3297,12 +3608,42 @@ function closeUsernameOptions() {
         
         state.notifications.add(messageId);
         
-        const message = {
-          timestamp: row[0],
-          sender: row[1],
-          receiver: row[2],
-          text: row[3]
-        };
+        // In processNewMessages(), update the message object creation:
+const message = {
+  timestamp: row[0],
+  sender: row[1],
+  receiver: row[2],
+  text: row[3],
+  localId: Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+  sharedId: createSharedMessageId({
+    timestamp: row[0],
+    sender: row[1],
+    receiver: row[2],
+    text: row[3]
+  })
+};
+
+console.log('📥 New message received:', {
+  sender: message.sender,
+  text: message.text.substring(0, 50),
+  sharedId: message.sharedId
+});
+
+        // ===== ADD THIS REACTION PARSING =====
+// Check if this is a reaction message
+const reactionMatch = message.text.match(/\[REACTION:([^:]+):([^:]+):([^:]+):([^\]]+)\]/);
+if (reactionMatch) {
+  const [_, targetMessageId, emoji, reactingUser, action] = reactionMatch;
+  
+  // Process the reaction
+  processIncomingReaction(targetMessageId, emoji, reactingUser, action, message.timestamp);
+  
+  // Mark this as a reaction message (to filter it out later)
+  message.isReactionMessage = true;
+  
+  // Skip further processing for reaction messages
+  return;
+}
 
         // Check if this is a reply message
     const replyMatch = message.text.match(/\[REPLY_TO:([^:]+):([^\]]+)\] (.+) \|\| (.+)/);
@@ -3823,6 +4164,47 @@ function formatReplyForDisplay(sender, originalText, replyText) {
       });
     }
 
+    // Add to setupEventListeners():
+// Double-click to add quick reaction
+document.addEventListener('dblclick', (e) => {
+  const messageElement = e.target.closest('.message');
+  if (messageElement && !e.target.closest('.message-actions') && !e.target.closest('.reaction')) {
+    const messageId = messageElement.dataset.messageId;
+    if (messageId) {
+      // Add like reaction on double-click
+      addReaction(messageId, '👍', state.currentUser);
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }
+});
+
+// Long press for reaction picker on mobile
+let pressTimer;
+document.addEventListener('touchstart', (e) => {
+  const messageElement = e.target.closest('.message');
+  if (messageElement) {
+    pressTimer = setTimeout(() => {
+      const messageId = messageElement.dataset.messageId;
+      const messageActions = messageElement.querySelector('.message-actions');
+      if (messageId && messageActions) {
+        const reactButton = messageActions.querySelector('[title="React"]');
+        if (reactButton) {
+          toggleReactionPicker(messageId, reactButton);
+        }
+      }
+    }, 500); // 500ms long press
+  }
+});
+
+document.addEventListener('touchend', () => {
+  clearTimeout(pressTimer);
+});
+
+document.addEventListener('touchmove', () => {
+  clearTimeout(pressTimer);
+});
+
     // ========== REPLY FUNCTIONALITY ==========
 
 // Set up reply to a message
@@ -3955,7 +4337,13 @@ function sendReplyMessage() {
       sender: state.currentReply.sender,
       text: state.currentReply.text,
       timestamp: state.currentReply.timestamp
-    }
+    },
+    sharedId: createSharedMessageId({ // ADD THIS
+    timestamp: timestamp,
+    sender: state.currentUser,
+    receiver: state.currentChat === 'Global Chat' ? 'GROUP' : state.currentChat,
+    text: replyText
+  })
   };
   
   // Add to chat
@@ -4110,7 +4498,13 @@ function sendForwardedMessage() {
     isForwarded: true,
     originalSender: state.currentForwardMessage.sender,
     originalMessage: state.currentForwardMessage.text,
-    forwardedAt: new Date().toISOString()
+    forwardedAt: new Date().toISOString(),
+      sharedId: createSharedMessageId({ // ADD THIS
+    timestamp: new Date().toISOString(),
+    sender: state.currentUser,
+    receiver: targetChat.id === 'Global Chat' ? 'GROUP' : targetChat.id,
+    text: state.currentForwardMessage.text
+  })
   };
   
   // Add to target chat with proper display text
@@ -4561,6 +4955,624 @@ document.addEventListener('click', (e) => {
     }
   }
 });
+
+// ========== MESSAGE REACTIONS FUNCTIONS ==========
+
+// Initialize reactions for a message
+function initializeMessageReactions(message) {
+  if (!message.reactions) {
+    message.reactions = {};
+  }
+  
+  // Initialize each reaction type
+  Object.keys(REACTIONS).forEach(emoji => {
+    if (!message.reactions[emoji]) {
+      message.reactions[emoji] = {
+        count: 0,
+        users: []
+      };
+    }
+  });
+  
+  return message;
+}
+
+// Add reaction to a message
+function addReaction(messageId, emoji, username) {
+  const currentChat = state.chats[state.currentChat];
+  if (!currentChat) return;
+  
+  const message = currentChat.messages.find(msg => msg.localId === messageId);
+  if (!message) return;
+  
+  // Ensure reactions object exists
+  message.reactions = message.reactions || {};
+  
+  // Initialize this emoji if not exists
+  if (!message.reactions[emoji]) {
+    message.reactions[emoji] = {
+      count: 0,
+      users: []
+    };
+  }
+  
+  const reaction = message.reactions[emoji];
+  
+  // Check if user already reacted with this emoji
+  const userIndex = reaction.users.indexOf(username);
+  let action = 'add'; // Track whether we're adding or removing
+  
+  if (userIndex > -1) {
+    // Remove reaction
+    reaction.users.splice(userIndex, 1);
+    reaction.count--;
+    action = 'remove';
+    
+    if (reaction.count === 0) {
+      delete message.reactions[emoji];
+    }
+    
+    showToast(`Removed ${emoji} reaction`, 'info');
+  } else {
+    // Add reaction
+    reaction.users.push(username);
+    reaction.count++;
+    action = 'add';
+    
+    showToast(`Reacted with ${emoji}`, 'success');
+  }
+
+  // Send reaction to Google Sheets for sync
+  sendReactionToBackend(messageId, emoji, username, action);
+  
+  // Update the message in state
+  const messageIndex = currentChat.messages.findIndex(msg => msg.localId === messageId);
+  if (messageIndex > -1) {
+    currentChat.messages[messageIndex] = { ...message };
+  }
+  
+  // Update UI
+  loadChatMessages();
+  
+  // Save reaction to localStorage for persistence
+  saveMessageReactions(messageId, message.reactions);
+}
+
+// Save reactions to localStorage
+function saveMessageReactions(messageId, reactions) {
+  const key = `chatApp_reactions_${messageId}`;
+  localStorage.setItem(key, JSON.stringify(reactions));
+}
+
+// Send reaction to Google Sheets
+// Send reaction to Google Sheets
+function sendReactionToBackend(messageId, emoji, username, action) {
+  const currentChat = state.chats[state.currentChat];
+  if (!currentChat) return;
+  
+  const message = currentChat.messages.find(msg => msg.localId === messageId);
+  if (!message) {
+    console.log('❌ Message not found for reaction:', messageId);
+    return;
+  }
+  
+  // Use sharedId if available, otherwise use localId
+  const targetId = message.sharedId || messageId;
+  console.log('📤 Sending reaction with target ID:', targetId);
+  
+  // Format: [REACTION:targetId:emoji:username:action]
+  const reactionMessage = `[REACTION:${targetId}:${emoji}:${username}:${action}]`;
+  
+  const backendMessage = {
+    timestamp: new Date().toISOString(),
+    sender: username,
+    receiver: state.currentChat === 'Global Chat' ? 'GROUP' : state.currentChat,
+    message: reactionMessage
+  };
+  
+  console.log('📤 Reaction payload:', backendMessage);
+  
+  // Send to Google Sheets
+  fetch(scriptUrl, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(backendMessage)
+  }).then(() => {
+    console.log('✅ Reaction sent to backend:', reactionMessage);
+  }).catch(error => {
+    console.error('❌ Error sending reaction:', error);
+    showToast('Failed to sync reaction', 'error');
+  });
+}
+
+// Load reactions from localStorage
+function loadMessageReactions(messageId) {
+  const key = `chatApp_reactions_${messageId}`;
+  const saved = localStorage.getItem(key);
+  return saved ? JSON.parse(saved) : null;
+}
+
+// Toggle reaction picker
+function toggleReactionPicker(messageId, element) {
+  const picker = document.getElementById(`reaction-picker-${messageId}`);
+  
+  if (picker && picker.classList.contains('show')) {
+    picker.classList.remove('show');
+  } else {
+    // Close any other open pickers
+    document.querySelectorAll('.reaction-picker.show').forEach(p => {
+      p.classList.remove('show');
+    });
+    
+    // Create or show picker
+    showReactionPicker(messageId, element);
+  }
+}
+
+// Show reaction picker
+function showReactionPicker(messageId, triggerElement) {
+  // Remove existing picker
+  const existingPicker = document.getElementById(`reaction-picker-${messageId}`);
+  if (existingPicker) {
+    existingPicker.remove();
+  }
+  
+  // Get position for picker
+  const rect = triggerElement.getBoundingClientRect();
+  
+  // Create picker
+  const picker = document.createElement('div');
+  picker.id = `reaction-picker-${messageId}`;
+  picker.className = 'reaction-picker';
+  
+  // Add reaction options
+  let pickerHTML = '';
+  Object.keys(REACTIONS).forEach(emoji => {
+    pickerHTML += `<div class="reaction-option" onclick="addReaction('${messageId}', '${emoji}', '${state.currentUser}')">${emoji}</div>`;
+  });
+  
+  picker.innerHTML = pickerHTML;
+  document.body.appendChild(picker);
+  
+  // Position picker
+  const pickerWidth = picker.offsetWidth;
+  const pickerHeight = picker.offsetHeight;
+  
+  let left = rect.left + (rect.width / 2) - (pickerWidth / 2);
+  let top = rect.top - pickerHeight - 10;
+  
+  // Adjust if near screen edges
+  if (left < 10) left = 10;
+  if (left + pickerWidth > window.innerWidth - 10) {
+    left = window.innerWidth - pickerWidth - 10;
+  }
+  if (top < 10) top = rect.bottom + 10;
+  
+  picker.style.left = `${left}px`;
+  picker.style.top = `${top}px`;
+  
+  // Show with animation
+  setTimeout(() => {
+    picker.classList.add('show');
+  }, 10);
+  
+  // Close picker when clicking outside
+  setTimeout(() => {
+    const closePicker = (e) => {
+      if (!picker.contains(e.target) && e.target !== triggerElement) {
+        picker.classList.remove('show');
+        document.removeEventListener('click', closePicker);
+        setTimeout(() => {
+          if (picker.parentNode) {
+            picker.remove();
+          }
+        }, 300);
+      }
+    };
+    document.addEventListener('click', closePicker);
+  }, 100);
+}
+
+// Create reaction element for a message
+function createReactionElement(message) {
+  if (!message.reactions || Object.keys(message.reactions).length === 0) {
+    return '';
+  }
+  
+  // Filter reactions with count > 0
+  const activeReactions = Object.entries(message.reactions)
+    .filter(([emoji, data]) => data.count > 0)
+    .sort((a, b) => b[1].count - a[1].count);
+  
+  if (activeReactions.length === 0) {
+    return '';
+  }
+  
+  let reactionsHTML = '<div class="message-reactions">';
+  
+  activeReactions.forEach(([emoji, data]) => {
+    const isUserReacted = data.users.includes(state.currentUser);
+    const reactionClass = `reaction ${isUserReacted ? 'active' : ''}`;
+    const userList = data.users.join(', ');
+    
+      reactionsHTML += `
+      <div class="${reactionClass}" 
+           onclick="addReaction('${message.localId}', '${emoji}', '${state.currentUser}')" 
+           oncontextmenu="event.preventDefault(); showReactionDetails('${message.localId}', '${emoji}')"
+           title="${userList} reacted with ${emoji}">
+        <span class="reaction-emoji">${emoji}</span>
+        <span class="reaction-count">${data.count}</span>
+      </div>
+    `;
+  });
+  
+  reactionsHTML += '</div>';
+  return reactionsHTML;
+}
+
+// Create a shared message ID that works across all users
+function createSharedMessageId(message) {
+  // Clean the text for consistent hashing
+  const cleanText = (message.text || '').trim().substring(0, 50);
+  const cleanSender = (message.sender || '').trim();
+  const cleanReceiver = (message.receiver || '').trim();
+  const cleanTimestamp = (message.timestamp || '').split('.')[0]; // Remove milliseconds
+  
+  // Create a consistent string for hashing
+  const hashString = `${cleanTimestamp}:${cleanSender}:${cleanReceiver}:${cleanText}`;
+  
+  // Simple hash function
+  let hash = 0;
+  for (let i = 0; i < hashString.length; i++) {
+    const char = hashString.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  
+  return `shared_${Math.abs(hash).toString(36)}`;
+}
+
+// Show reaction details
+function showReactionDetails(messageId, emoji) {
+  const currentChat = state.chats[state.currentChat];
+  if (!currentChat) return;
+  
+  const message = currentChat.messages.find(msg => msg.localId === messageId);
+  if (!message || !message.reactions || !message.reactions[emoji]) return;
+  
+  const reaction = message.reactions[emoji];
+  
+  const modalHTML = `
+    <div class="modal-overlay active" id="reaction-details-modal">
+      <div class="modal-content reaction-details-modal">
+        <h2 class="modal-title" style="display: flex; align-items: center; gap: 10px;">
+          <span>${emoji}</span>
+          <span>${REACTIONS[emoji].name}</span>
+        </h2>
+        
+        <div style="margin: 15px 0; text-align: center;">
+          <div style="font-size: 48px; margin-bottom: 10px;">${emoji}</div>
+          <div style="color: var(--text-secondary);">
+            ${reaction.count} reaction${reaction.count !== 1 ? 's' : ''}
+          </div>
+        </div>
+        
+        <div style="max-height: 300px; overflow-y: auto;">
+          ${reaction.users.map(user => `
+            <div class="reaction-detail-item">
+              <div class="reaction-detail-left">
+                <div class="profile-avatar small" style="background: ${getColorFromString(user)}; width: 36px; height: 36px;">
+                  ${getInitials(user)}
+                </div>
+                <div>
+                  <div class="reaction-detail-name">${user}</div>
+                  <div class="reaction-detail-time">Reacted with ${emoji}</div>
+                </div>
+              </div>
+              ${user === state.currentUser ? 
+                '<button class="unblock-btn" onclick="removeOwnReaction(\'' + messageId + '\', \'' + emoji + '\')">Remove</button>' : 
+                ''
+              }
+            </div>
+          `).join('')}
+        </div>
+        
+        <div class="modal-actions">
+          <button class="modal-btn primary" onclick="closeReactionDetails()">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  const modalContainer = document.createElement('div');
+  modalContainer.innerHTML = modalHTML;
+  document.body.appendChild(modalContainer);
+}
+
+// Remove own reaction from details view
+function removeOwnReaction(messageId, emoji) {
+  addReaction(messageId, emoji, state.currentUser);
+  closeReactionDetails();
+  setTimeout(() => {
+    showReactionDetails(messageId, emoji);
+  }, 100);
+}
+
+// Close reaction details modal
+function closeReactionDetails() {
+  const modal = document.getElementById('reaction-details-modal');
+  if (modal) modal.remove();
+}
+
+// Load saved reactions when loading messages
+function loadSavedReactions(message) {
+  if (!message.localId) return message;
+  
+  const savedReactions = loadMessageReactions(message.localId);
+  if (savedReactions) {
+    message.reactions = { ...savedReactions };
+  }
+  
+  return message;
+}
+
+// Process incoming reactions from other users
+// Process incoming reactions from other users
+function processIncomingReaction(targetMessageId, emoji, reactingUser, action, timestamp) {
+  console.log('🔍 Processing incoming reaction:', { targetMessageId, emoji, reactingUser, action });
+  debugReaction(targetMessageId, emoji, reactingUser, action);
+  
+  // First, check if targetMessageId is a sharedId (starts with "shared_")
+  const isSharedId = targetMessageId.startsWith('shared_');
+  
+  let targetChat = null;
+  let targetMessage = null;
+  
+  // Search through all chats
+  for (const chatId in state.chats) {
+    const chat = state.chats[chatId];
+    if (!chat.messages) continue;
+    
+    // Try to find the message
+    const foundMessage = chat.messages.find(msg => {
+      if (isSharedId) {
+        // Look for sharedId match
+        return msg.sharedId === targetMessageId;
+      } else {
+        // Look for localId match (fallback)
+        return msg.localId === targetMessageId;
+      }
+    });
+    
+    if (foundMessage) {
+      targetChat = chat;
+      targetMessage = foundMessage;
+      console.log('✅ Found target message:', targetMessage.text.substring(0, 50));
+      break;
+    }
+  }
+  
+  // If not found by ID, try to find by content (emergency fallback)
+  if (!targetMessage) {
+    console.log('⚠️ Message not found by ID, trying content matching...');
+    
+    // Extract possible message text from the sharedId or look for recent messages
+    for (const chatId in state.chats) {
+      const chat = state.chats[chatId];
+      if (!chat.messages) continue;
+      
+      // Get most recent messages (last 20)
+      const recentMessages = [...chat.messages]
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+        .slice(0, 20);
+      
+      for (const msg of recentMessages) {
+        // Check if message is from a similar time (within 5 minutes)
+        const reactionTime = new Date(timestamp);
+        const messageTime = new Date(msg.timestamp);
+        const timeDiff = Math.abs(reactionTime - messageTime);
+        
+        if (timeDiff < 300000) { // 5 minutes
+          targetChat = chat;
+          targetMessage = msg;
+          console.log('✅ Found recent message as fallback');
+          break;
+        }
+      }
+      
+      if (targetMessage) break;
+    }
+  }
+  
+  if (!targetChat || !targetMessage) {
+    console.log('❌ Could not find target message for reaction');
+    showToast(`Reaction from ${reactingUser} could not be applied`, 'warning');
+    return;
+  }
+  
+  // Ensure reactions object exists
+  targetMessage.reactions = targetMessage.reactions || {};
+  
+  // Initialize this emoji if not exists
+  if (!targetMessage.reactions[emoji]) {
+    targetMessage.reactions[emoji] = {
+      count: 0,
+      users: []
+    };
+  }
+  
+  const reaction = targetMessage.reactions[emoji];
+  
+  if (action === 'add') {
+    // Add reaction if not already present
+    if (!reaction.users.includes(reactingUser)) {
+      reaction.users.push(reactingUser);
+      reaction.count++;
+      console.log(`✅ Added ${emoji} from ${reactingUser}`);
+      
+      // Show notification for reactions to your messages
+      if (targetMessage.sender === state.currentUser && reactingUser !== state.currentUser) {
+        showToast(`${reactingUser} reacted ${emoji} to your message`, 'info');
+      }
+    }
+  } else if (action === 'remove') {
+    // Remove reaction
+    const userIndex = reaction.users.indexOf(reactingUser);
+    if (userIndex > -1) {
+      reaction.users.splice(userIndex, 1);
+      reaction.count--;
+      console.log(`✅ Removed ${emoji} from ${reactingUser}`);
+      
+      if (reaction.count === 0) {
+        delete targetMessage.reactions[emoji];
+      }
+    }
+  }
+  
+  // Update the message in the chat array
+  const messageIndex = targetChat.messages.findIndex(msg => 
+    msg.localId === targetMessage.localId
+  );
+  
+  if (messageIndex > -1) {
+    targetChat.messages[messageIndex] = { ...targetMessage };
+  }
+  
+  // Save to localStorage
+  saveMessageReactions(targetMessage.localId, targetMessage.reactions);
+  
+  // Update UI if we're currently viewing this chat
+  if (state.currentChat === targetChat.id) {
+    console.log('🔄 Reloading messages for current chat');
+    loadChatMessages();
+  }
+  
+  // Update chat cards
+  renderChatCards();
+  
+  console.log('✅ Reaction processed successfully');
+}
+
+// Helper to find a message by ID across all chats
+function findMessageById(messageId) {
+  for (const chatId in state.chats) {
+    const chat = state.chats[chatId];
+    if (chat.messages) {
+      const message = chat.messages.find(msg => msg.localId === messageId);
+      if (message) {
+        return { chat, message, chatId };
+      }
+    }
+  }
+  return null;
+}
+
+// Load reactions from existing messages in Google Sheets data
+function loadReactionsFromExistingMessages() {
+  // This would be called after loading initial messages
+  // It would parse all existing messages for reaction data
+  
+  // For now, we'll rely on the polling to catch up
+  // In a production app, you might want to parse all historical messages
+  console.log('Reaction system initialized');
+}
+
+// Assign shared IDs to existing messages
+function assignSharedIdsToExistingMessages() {
+  for (const chatId in state.chats) {
+    const chat = state.chats[chatId];
+    if (chat.messages) {
+      chat.messages.forEach(msg => {
+        if (!msg.sharedId) {
+          msg.sharedId = createSharedMessageId({
+            timestamp: msg.timestamp,
+            sender: msg.sender,
+            receiver: msg.receiver || chatId,
+            text: msg.text
+          });
+        }
+      });
+    }
+  }
+}
+
+// Debug function for reactions
+function debugReaction(targetMessageId, emoji, reactingUser, action) {
+  console.log('=== REACTION DEBUG ===');
+  console.log('Target Message ID:', targetMessageId);
+  console.log('Emoji:', emoji);
+  console.log('User:', reactingUser);
+  console.log('Action:', action);
+  
+  // Log all messages with their IDs
+  for (const chatId in state.chats) {
+    const chat = state.chats[chatId];
+    if (chat.messages) {
+      console.log(`Chat: ${chatId}`);
+      chat.messages.forEach((msg, index) => {
+        console.log(`  [${index}] localId: ${msg.localId}, sharedId: ${msg.sharedId}, text: ${msg.text.substring(0, 30)}...`);
+      });
+    }
+  }
+  console.log('======================');
+}
+
+// Test function to verify reaction system
+function testReactionSystem() {
+  console.log('🧪 Testing reaction system...');
+  
+  if (!state.currentChat || !state.currentUser) {
+    console.log('❌ No chat or user selected');
+    return;
+  }
+  
+  const currentChat = state.chats[state.currentChat];
+  if (!currentChat.messages || currentChat.messages.length === 0) {
+    console.log('❌ No messages in current chat');
+    return;
+  }
+  
+  // Get the latest message
+  const latestMessage = currentChat.messages[currentChat.messages.length - 1];
+  console.log('📝 Latest message:', latestMessage.text.substring(0, 50));
+  console.log('🔑 Message IDs - localId:', latestMessage.localId, 'sharedId:', latestMessage.sharedId);
+  
+  // Test adding a reaction
+  console.log('🧪 Testing reaction addition...');
+  addReaction(latestMessage.localId, '👍', state.currentUser);
+}
+
+// Check for reaction sync issues
+function checkReactionSync() {
+  console.log('🔄 Checking reaction sync...');
+  
+  // Log reaction counts for debugging
+  for (const chatId in state.chats) {
+    const chat = state.chats[chatId];
+    if (chat.messages) {
+      let reactionCount = 0;
+      chat.messages.forEach(msg => {
+        if (msg.reactions) {
+          Object.values(msg.reactions).forEach(reaction => {
+            reactionCount += reaction.count;
+          });
+        }
+      });
+      
+      if (reactionCount > 0) {
+        console.log(`💬 Chat ${chatId}: ${reactionCount} total reactions`);
+      }
+    }
+  }
+}
+
+// Call this every 30 seconds
+setInterval(checkReactionSync, 30000);
   </script>
 </body>
 </html>
