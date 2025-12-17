@@ -1441,6 +1441,158 @@
   color: var(--notification-color);
 }
 
+/* Clickable phone numbers and URLs in messages */
+.message-text {
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.clickable-link {
+  color: #0084ff;
+  text-decoration: underline;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clickable-link:hover {
+  color: #0066cc;
+  text-decoration: none;
+}
+
+.clickable-phone {
+  color: #31a24c;
+  text-decoration: underline;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clickable-phone:hover {
+  color: #258b3d;
+  text-decoration: none;
+}
+
+/* For sent messages */
+.message.sent .clickable-link {
+  color: #ffffff;
+  opacity: 0.9;
+}
+
+.message.sent .clickable-phone {
+  color: #ffffff;
+  opacity: 0.9;
+}
+
+.message.sent .clickable-link:hover,
+.message.sent .clickable-phone:hover {
+  opacity: 1;
+}
+
+/* URL preview tooltip */
+.url-tooltip {
+  position: absolute;
+  background: var(--sidebar-bg);
+  color: var(--text-primary);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-color);
+  max-width: 300px;
+  word-wrap: break-word;
+  display: none;
+}
+
+.url-tooltip.show {
+  display: block;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Phone call confirmation */
+.phone-call-modal {
+  text-align: center;
+}
+
+.phone-call-modal i {
+  font-size: 30px;
+  color: #31a24c;
+  margin-bottom: 15px;
+}
+
+.phone-number-display {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 15px 0;
+  color: var(--text-primary);
+  background: var(--message-received);
+  padding: 10px;
+  border-radius: 6px;
+  letter-spacing: 1px;
+}
+
+/* External link warning */
+.external-link-warning {
+  background: rgba(255, 149, 0, 0.1);
+  border: 1px solid var(--warning-color);
+  border-radius: 8px;
+  padding: 10px;
+  margin: 10px 0;
+  font-size: 12px;
+}
+
+.external-link-warning i {
+  color: var(--warning-color);
+  margin-right: 5px;
+}
+
+/* Context menu for links */
+.link-context-menu {
+  position: absolute;
+  background: var(--sidebar-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 8px 0;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  min-width: 180px;
+  display: none;
+}
+
+.link-context-menu.show {
+  display: block;
+  animation: fadeIn 0.2s ease;
+}
+
+.context-menu-item {
+  padding: 8px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background 0.2s;
+}
+
+.context-menu-item:hover {
+  background: var(--hover-color);
+}
+
+.context-menu-item i {
+  width: 16px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.context-menu-divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 4px 0;
+}
+
     /* Responsive Design */
     @media (max-width: 768px) {
       .sidebar {
@@ -2501,6 +2653,11 @@ document.head.appendChild(style);
       });
       
       scrollToBottom();
+
+      // After loading messages, apply linkification
+setTimeout(() => {
+  applyLinkificationToExistingMessages();
+}, 100);
     }
 
     // Show request view
@@ -2571,7 +2728,7 @@ document.head.appendChild(style);
   
 // Replace the reply indicator HTML creation with this:
 if (message.isReply && message.replyTo) {
-  const canJumpToOriginal = message.replyTo.messageId && 
+  const canJumpToOriginal = message.replyTo.identifier && 
                            (chat.type !== 'group' || message.replyTo.sender === state.currentUser || 
                             message.sender === message.replyTo.sender);
   
@@ -2579,9 +2736,9 @@ if (message.isReply && message.replyTo) {
   const titleText = canJumpToOriginal ? 'Click to jump to original message' : 'Reply to another message';
   
   messageContent += `
-    <div class="${indicatorClass}" ${canJumpToOriginal ? `onclick="scrollToReply('${message.replyTo.messageId}', '${escapeHtml(message.replyTo.sender)}')"` : ''} title="${titleText}">
+    <div class="${indicatorClass}" ${canJumpToOriginal ? `onclick="scrollToReply('${message.replyTo.identifier}', '${escapeHtml(message.replyTo.sender)}', '${escapeHtml(message.replyTo.text)}')"` : ''} title="${titleText}">
       <i class="fas fa-reply"></i>
-      <span class="reply-sender-name">${escapeHtml(message.replyTo.sender)}</span>
+      <span class="reply-sender-name" style="color: yellow">${escapeHtml(message.replyTo.sender)}</span>
       <span class="reply-preview-text">
         ${escapeHtml(message.replyTo.text.substring(0, 60))}${message.replyTo.text.length > 60 ? '...' : ''}
       </span>
@@ -2592,9 +2749,9 @@ if (message.isReply && message.replyTo) {
   // Add forwarded indicator if this is forwarded
   if (message.isForwarded) {
     messageContent += `
-      <div class="reply-to-indicator">
+      <div class="reply-to-indicator" style="color:  #0084ff; background: black"
         <i class="fas fa-share"></i>
-        Forwarded from ${escapeHtml(message.originalSender)}
+        <i class="fas fa-share"></i> ${escapeHtml(message.originalSender)}
       </div>
     `;
   }
@@ -2615,11 +2772,14 @@ if (message.isReply && message.replyTo) {
       handleUsernameClick(message.sender);
     });
     
-    div.innerHTML = `
-      ${messageContent}
-      <div class="message-text">${escapeHtml(message.text)}</div>
-      <div class="message-time">${time}</div>
-    `;
+    // Parse text for clickable links and phone numbers
+    const parsedText = parseAndLinkify(message.text);
+    
+div.innerHTML = `
+  ${messageContent}
+  <div class="message-text">${parsedText}</div>
+  <div class="message-time">${time}</div>
+`;
     
     // Insert username and actions
     div.insertBefore(usernameSpan, div.firstChild);
@@ -2654,29 +2814,58 @@ if (message.isReply && message.replyTo) {
   return div;
 }
 
-// Add this function to scroll to original message
-// Smart scroll to reply - only works within current chat
-function scrollToReply(messageId, originalSender) {
+// Add this reply function to scroll to original message
+function scrollToReply(identifier, originalSender, originalText) {
   const currentChat = state.chats[state.currentChat];
-  if (!currentChat) return;
+  if (!currentChat) {
+    showToast('No chat selected', 'info');
+    return;
+  }
   
-  // Check if this reply is within the current chat
-   console.log('Looking for message ID:', messageId);
-  console.log('Available message IDs:', currentChat.messages.map(m => m.localId));
+  console.log('Looking for reply to:', { identifier, originalSender, originalText });
   
-  // Find the original message in current chat
-  const originalMessage = currentChat.messages.find(msg => 
-    msg.localId === messageId || 
-    msg.replyTo?.messageId === messageId
-  );
-
+  // Try to find the original message by content
+  // Look for messages from the same sender with similar text
+  const originalMessage = currentChat.messages.find(msg => {
+    // Check if this message matches the reply identifier
+    if (msg.replyTo && msg.replyTo.identifier === identifier) {
+      return true; // Direct match by identifier
+    }
+    
+    // Content-based matching (fallback)
+    const isSameSender = msg.sender === originalSender;
+    const hasSimilarText = msg.text && originalText && 
+                          (msg.text.includes(originalText.substring(0, 20)) || 
+                           originalText.includes(msg.text.substring(0, 20)));
+    
+    return isSameSender && hasSimilarText;
+  });
+  
   if (originalMessage) {
     console.log('Found original message:', originalMessage);
+    
     // Find the message element in DOM
-    const messageElement = document.querySelector(`[data-message-id="${originalMessage.localId}"]`);
+    let messageElement;
+    
+    // Try by localId first
+    if (originalMessage.localId) {
+      messageElement = document.querySelector(`[data-message-id="${originalMessage.localId}"]`);
+    }
+    
+    // If not found, try by content
+    if (!messageElement) {
+      // Find element that contains the text
+      const allMessages = document.querySelectorAll('.message');
+      for (const element of allMessages) {
+        if (element.textContent.includes(originalMessage.text.substring(0, 30))) {
+          messageElement = element;
+          break;
+        }
+      }
+    }
     
     if (messageElement) {
-         console.log('Found DOM element, scrolling...');
+      console.log('Found DOM element, scrolling...');
       // Scroll to and highlight the message
       messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
       messageElement.classList.add('reply-highlight');
@@ -2687,12 +2876,30 @@ function scrollToReply(messageId, originalSender) {
       }, 2000);
       
       return;
+    } else {
+      console.log('DOM element not found');
+    }
+  }
+  
+  // If we get here, try to find any message from that sender
+  const anyMessageFromSender = currentChat.messages.find(msg => 
+    msg.sender === originalSender
+  );
+  
+  if (anyMessageFromSender && anyMessageFromSender.localId) {
+    const messageElement = document.querySelector(`[data-message-id="${anyMessageFromSender.localId}"]`);
+    if (messageElement) {
+      messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      messageElement.classList.add('reply-highlight');
+      setTimeout(() => {
+        messageElement.classList.remove('reply-highlight');
+      }, 2000);
+      return;
     }
   }
   
   // If we get here, the original message isn't in current chat
-    console.log('Original message not found, showing toast');
-  showToast(`Original message by ${originalSender} not found in this chat`, 'info');
+  showToast(`Could not find the original message from ${originalSender}`, 'info');
 }
 
 // Add this function to handle username clicks:
@@ -3101,12 +3308,12 @@ function closeUsernameOptions() {
     const replyMatch = message.text.match(/\[REPLY_TO:([^:]+):([^\]]+)\] (.+) \|\| (.+)/);
     if (replyMatch) {
       // It's a reply message
-      const [_, replyToMessageId, replyToSender, originalText, replyText] = replyMatch;
+      const [_, replyIdentifier, replyToSender, originalText, replyText] = replyMatch;
       
       message.isReply = true;
       message.text = replyText; // Use the reply text
       message.replyTo = {
-        messageId: replyToMessageId,
+        identifier: replyIdentifier,
         sender: replyToSender,
         text: originalText,
         timestamp: message.timestamp // Use same timestamp for now
@@ -3620,12 +3827,15 @@ function formatReplyForDisplay(sender, originalText, replyText) {
 
 // Set up reply to a message
 function setupReply(messageId, sender, text) {
+    const replyIdentifier = createReplyIdentifier(sender, text);
+
      // Escape HTML to prevent issues
   const safeSender = escapeHtml(sender);
   const safeText = escapeHtml(text.substring(0, 100)); // Limit length
 
   state.currentReply = {
     messageId: messageId,
+    identifier: replyIdentifier,
     sender,
     text,
     timestamp: new Date().toISOString()
@@ -3717,9 +3927,13 @@ function sendReplyMessage() {
   const messageId = Date.now() + '-' + Math.random().toString(36).substr(2, 9);
   const timestamp = new Date().toISOString();
 
-    // Format for backend - include reply metadata in the message
-  const replyMessageText = `[REPLY_TO:${state.currentReply.messageId}:${state.currentReply.sender}] ${state.currentReply.text} || ${replyText}`;
+    
+  // Create a content-based identifier (not message ID)
+  const replyIdentifier = createReplyIdentifier(state.currentReply.sender, state.currentReply.text);
   
+  // Format for backend - use content-based identifier
+  const replyMessageText = `[REPLY_TO:${replyIdentifier}:${state.currentReply.sender}] ${state.currentReply.text} || ${replyText}`;
+
   const message = {
     timestamp: timestamp,
     sender: state.currentUser,
@@ -3737,7 +3951,7 @@ function sendReplyMessage() {
     localId: messageId,
     isReply: true,
     replyTo: {
-      messageId: state.currentReply.messageId,
+      identifier: replyIdentifier,
       sender: state.currentReply.sender,
       text: state.currentReply.text,
       timestamp: state.currentReply.timestamp
@@ -3902,7 +4116,7 @@ function sendForwardedMessage() {
   // Add to target chat with proper display text
   const displayMessage = {
     ...message,
-    text: `↪ Forwarded from ${state.currentForwardMessage.sender}: ${state.currentForwardMessage.text}`
+    text: `↪ Forwarded from ${state.currentForwardMessage.sender}: ${state.currentForwardMessage.text}`,
   };
   
   targetChat.messages.push(displayMessage);
@@ -3965,6 +4179,388 @@ function canJumpToReply(replyMessage, currentChat) {
   // For individual chats
   return isSameChat;
 }
+
+// Helper to find message by content
+function findMessageByContent(chat, sender, text) {
+  if (!chat || !chat.messages) return null;
+  
+  // Try exact match first
+  for (const msg of chat.messages) {
+    if (msg.sender === sender && msg.text === text) {
+      return msg;
+    }
+  }
+  
+  // Try partial match (first 20 chars)
+  const searchText = text.substring(0, Math.min(20, text.length));
+  for (const msg of chat.messages) {
+    if (msg.sender === sender && msg.text && msg.text.includes(searchText)) {
+      return msg;
+    }
+  }
+  
+  // Try any message from sender
+  for (const msg of chat.messages) {
+    if (msg.sender === sender) {
+      return msg;
+    }
+  }
+  
+  return null;
+}
+
+// Create a content-based identifier for replies
+function createReplyIdentifier(sender, text) {
+  // Create a hash from sender + first 20 chars of text
+  const content = sender + ':' + text.substring(0, Math.min(20, text.length));
+  let hash = 0;
+  for (let i = 0; i < content.length; i++) {
+    const char = content.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return 'msg_' + Math.abs(hash).toString(36);
+}
+
+// Context menu for links
+let currentContextMenuUrl = '';
+let currentContextMenuPhone = '';
+
+// Show context menu for links
+document.addEventListener('contextmenu', (e) => {
+  const clickedElement = e.target;
+  
+  // Check if clicked on a link or phone number
+  if (clickedElement.classList.contains('clickable-link')) {
+    e.preventDefault();
+    currentContextMenuUrl = clickedElement.textContent;
+    showLinkContextMenu(e.clientX, e.clientY);
+  } else if (clickedElement.classList.contains('clickable-phone')) {
+    e.preventDefault();
+    currentContextMenuPhone = clickedElement.textContent;
+    showPhoneContextMenu(e.clientX, e.clientY);
+  }
+});
+
+// Close context menu on click
+document.addEventListener('click', () => {
+  hideContextMenu();
+});
+
+// Show link context menu
+function showLinkContextMenu(x, y) {
+  hideContextMenu();
+  
+  const menu = document.createElement('div');
+  menu.className = 'link-context-menu';
+  menu.id = 'link-context-menu';
+  menu.style.left = x + 'px';
+  menu.style.top = y + 'px';
+  
+  const url = currentContextMenuUrl.startsWith('www.') ? 'https://' + currentContextMenuUrl : currentContextMenuUrl;
+  
+  menu.innerHTML = `
+    <div class="context-menu-item" onclick="copyToClipboard('${escapeHtml(url)}', 'Link')">
+      <i class="fas fa-copy"></i>
+      <span>Copy Link</span>
+    </div>
+    <div class="context-menu-item" onclick="openInNewTab('${escapeHtml(url)}')">
+      <i class="fas fa-external-link-alt"></i>
+      <span>Open in New Tab</span>
+    </div>
+    <div class="context-menu-divider"></div>
+    <div class="context-menu-item" onclick="shareLink('${escapeHtml(url)}')">
+      <i class="fas fa-share"></i>
+      <span>Share Link</span>
+    </div>
+  `;
+  
+  document.body.appendChild(menu);
+  menu.classList.add('show');
+}
+
+// Show phone context menu
+function showPhoneContextMenu(x, y) {
+  hideContextMenu();
+  
+  const menu = document.createElement('div');
+  menu.className = 'link-context-menu';
+  menu.id = 'phone-context-menu';
+  menu.style.left = x + 'px';
+  menu.style.top = y + 'px';
+  
+  const cleanNumber = currentContextMenuPhone.replace(/[\s\-\(\)]/g, '');
+  
+  menu.innerHTML = `
+    <div class="context-menu-item" onclick="copyToClipboard('${cleanNumber}', 'Phone Number')">
+      <i class="fas fa-copy"></i>
+      <span>Copy Number</span>
+    </div>
+    <div class="context-menu-item" onclick="addToContacts('${cleanNumber}')">
+      <i class="fas fa-address-book"></i>
+      <span>Add to Contacts</span>
+    </div>
+    <div class="context-menu-divider"></div>
+    <div class="context-menu-item" onclick="makePhoneCall('${cleanNumber}')">
+      <i class="fas fa-phone"></i>
+      <span>Call Now</span>
+    </div>
+  `;
+  
+  document.body.appendChild(menu);
+  menu.classList.add('show');
+}
+
+// Hide context menu
+function hideContextMenu() {
+  const menu = document.getElementById('link-context-menu');
+  const phoneMenu = document.getElementById('phone-context-menu');
+  
+  if (menu) menu.remove();
+  if (phoneMenu) phoneMenu.remove();
+}
+
+// Helper functions for context menu
+function copyToClipboard(text, label) {
+  navigator.clipboard.writeText(text).then(() => {
+    showToast(`${label} copied to clipboard`, 'success');
+    hideContextMenu();
+  }).catch(err => {
+    console.error('Failed to copy:', err);
+    showToast('Failed to copy', 'error');
+  });
+}
+
+function openInNewTab(url) {
+  proceedToLink(url);
+  hideContextMenu();
+}
+
+function shareLink(url) {
+  if (navigator.share) {
+    navigator.share({
+      title: 'Check this link',
+      url: url
+    }).then(() => {
+      hideContextMenu();
+    }).catch(err => {
+      console.error('Share failed:', err);
+      copyToClipboard(url, 'Link');
+    });
+  } else {
+    copyToClipboard(url, 'Link');
+  }
+}
+
+function addToContacts(number) {
+  // This would typically open the device's contacts app
+  // For now, just copy to clipboard
+  copyToClipboard(number, 'Phone Number');
+  showToast('Paste the number in your contacts app', 'info');
+}
+
+// Apply linkification to all messages in current chat
+function applyLinkificationToExistingMessages() {
+  if (!state.currentChat || !elements.messagesContainer) return;
+  
+  const messageElements = elements.messagesContainer.querySelectorAll('.message-text');
+  
+  messageElements.forEach(element => {
+    // Only process if not already linkified (no clickable links inside)
+    if (!element.innerHTML.includes('clickable-link') && !element.innerHTML.includes('clickable-phone')) {
+      const originalText = element.textContent;
+      const linkifiedText = parseAndLinkify(originalText);
+      
+      // Only update if changes were made
+      if (linkifiedText !== escapeHtml(originalText)) {
+        element.innerHTML = linkifiedText;
+      }
+    }
+  });
+}
+
+// Function to parse and make URLs/phones clickable
+function parseAndLinkify(text) {
+  if (!text) return '';
+  
+  // Escape HTML first to prevent XSS
+  let safeText = escapeHtml(text);
+  
+  // Parse URLs (http, https, ftp, www)
+  safeText = safeText.replace(
+    /(\b(https?|ftp):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gi,
+    '<span class="clickable-link" onclick="handleLinkClick(\'$1\')">$1</span>'
+  );
+  
+  // Parse www links without protocol
+  safeText = safeText.replace(
+    /(\bwww\.[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gi,
+    '<span class="clickable-link" onclick="handleLinkClick(\'https://$1\')">$1</span>'
+  );
+  
+  // Parse email addresses
+  safeText = safeText.replace(
+    /(\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b)/gi,
+    '<span class="clickable-link" onclick="handleEmailClick(\'$1\')">$1</span>'
+  );
+  
+  // Parse phone numbers (various international formats)
+  safeText = safeText.replace(
+    /(\+?[\d\s\-\(\)]{7,}\d)/g,
+    function(match) {
+      // Clean the phone number for dialing
+      const cleanNumber = match.replace(/[\s\-\(\)]/g, '');
+      return `<span class="clickable-phone" onclick="handlePhoneClick('${cleanNumber}', '${match}')">${match}</span>`;
+    }
+  );
+  
+  return safeText;
+}
+
+// Handle URL clicks
+function handleLinkClick(url) {
+  // Add protocol if missing
+  let fullUrl = url;
+  if (!url.match(/^https?:\/\//i) && !url.match(/^ftp:\/\//i)) {
+    if (url.startsWith('www.')) {
+      fullUrl = 'https://' + url;
+    } else {
+      fullUrl = 'https://' + url;
+    }
+  }
+  
+  // Show confirmation for external links
+  showLinkConfirmation(fullUrl);
+}
+
+// Handle email clicks
+function handleEmailClick(email) {
+  if (confirm(`Send email to ${email}?`)) {
+    window.location.href = `mailto:${email}`;
+  }
+}
+
+// Handle phone number clicks
+function handlePhoneClick(cleanNumber, displayNumber) {
+  showPhoneCallConfirmation(cleanNumber, displayNumber);
+}
+
+// Show confirmation modal for external links
+function showLinkConfirmation(url) {
+  const domain = extractDomain(url);
+  
+  const modalHTML = `
+    <div class="modal-overlay active" id="link-confirmation-modal">
+      <div class="modal-content">
+        <h2 class="modal-title">Open External Link</h2>
+        
+        <div class="external-link-warning">
+          <i class="fas fa-external-link-alt"></i>
+          You are about to open an external website
+        </div>
+        
+        <p style="margin: 15px 0; word-break: break-all; color: var(--text-secondary);">
+          ${url}
+        </p>
+        
+        <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 20px;">
+          Domain: ${domain}
+        </p>
+        
+        <div class="modal-actions">
+          <button class="modal-btn secondary" onclick="closeLinkConfirmation()">
+            Cancel
+          </button>
+          <button class="modal-btn primary" onclick="proceedToLink('${escapeHtml(url)}')">
+            Open Link
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  const modalContainer = document.createElement('div');
+  modalContainer.innerHTML = modalHTML;
+  document.body.appendChild(modalContainer);
+}
+
+// Show phone call confirmation modal
+function showPhoneCallConfirmation(cleanNumber, displayNumber) {
+  const modalHTML = `
+    <div class="modal-overlay active" id="phone-confirmation-modal">
+      <div class="modal-content phone-call-modal">
+        <i class="fas fa-phone-alt"></i>
+        <h2 class="modal-title">Call Phone Number</h2>
+        
+        <div class="phone-number-display">
+          ${displayNumber}
+        </div>
+        
+        <p style="margin-bottom: 20px; color: var(--text-secondary);">
+          Do you want to call this number?
+        </p>
+        
+        <div class="modal-actions">
+          <button class="modal-btn secondary" onclick="closePhoneConfirmation()">
+            Cancel
+          </button>
+          <button class="modal-btn primary" onclick="makePhoneCall('${cleanNumber}')">
+            <i class="fas fa-phone" style="margin-right: 8px;"></i>
+            Call Now
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  const modalContainer = document.createElement('div');
+  modalContainer.innerHTML = modalHTML;
+  document.body.appendChild(modalContainer);
+}
+
+// Extract domain from URL
+function extractDomain(url) {
+  try {
+    const urlObj = new URL(url.startsWith('http') ? url : 'https://' + url);
+    return urlObj.hostname;
+  } catch (e) {
+    return url;
+  }
+}
+
+// Proceed to open link
+function proceedToLink(url) {
+  closeLinkConfirmation();
+  window.open(url, '_blank', 'noopener,noreferrer');
+}
+
+// Make phone call
+function makePhoneCall(number) {
+  closePhoneConfirmation();
+  window.location.href = `tel:${number}`;
+}
+
+// Close modals
+function closeLinkConfirmation() {
+  const modal = document.getElementById('link-confirmation-modal');
+  if (modal) modal.remove();
+}
+
+function closePhoneConfirmation() {
+  const modal = document.getElementById('phone-confirmation-modal');
+  if (modal) modal.remove();
+}
+
+// Close modals when clicking outside
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('modal-overlay')) {
+    if (e.target.id === 'link-confirmation-modal') {
+      closeLinkConfirmation();
+    } else if (e.target.id === 'phone-confirmation-modal') {
+      closePhoneConfirmation();
+    }
+  }
+});
   </script>
 </body>
 </html>
