@@ -2129,7 +2129,7 @@
           <button class="header-btn" onclick="searchChats()" title="Search">
             <i class="fas fa-search"></i>
           </button>
-          <button class="header-btn" onclick="refreshChats()" title="Refresh">
+          <button class="header-btn" onclick="addMarkAllReadButton()" title="Refresh">
             <i class="fas fa-sync-alt"></i>
           </button>
           <button class="header-btn" onclick="showAddContactModal()" title="Add Contact">
@@ -2307,6 +2307,7 @@ const QUICK_REACTIONS = ['🙌🏽', '👍', '❤️', '😂', '🔥', '😮', '
       loadPrivacySettings();
       loadBlockedUsers();
       initializeChats();
+      updateAllUnreadCounts();
       renderChatCards();
       
       // Check for new messages every 1 second
@@ -2710,9 +2711,13 @@ const QUICK_REACTIONS = ['🙌🏽', '👍', '❤️', '😂', '🔥', '😮', '
       const lastMessage = getLastMessagePreview(chat);
       const time = formatTime(chat.lastActivity);
       
-      const card = document.createElement('div');
-      card.className = `chat-card ${isActive ? 'active' : ''} ${isRequest ? 'request-card' : ''} ${chat.unread > 0 ? 'has-unread' : ''}`;
-      card.dataset.chatId = chat.id;
+      // Calculate unread count for this chat
+const unreadCount = calculateUnreadCount(chat);
+const hasUnread = unreadCount > 0;
+
+const card = document.createElement('div');
+card.className = `chat-card ${isActive ? 'active' : ''} ${isRequest ? 'request-card' : ''} ${hasUnread ? 'has-unread' : ''}`;
+card.dataset.chatId = chat.id;
       
       // Status text
       let statusText = '';
@@ -2736,7 +2741,7 @@ const QUICK_REACTIONS = ['🙌🏽', '👍', '❤️', '😂', '🔥', '😮', '
             <div class="chat-card-preview">${lastMessage}</div>
           </div>
         </div>
-        ${chat.unread > 0 ? `<div class="chat-card-badge">${chat.unread}</div>` : ''}
+        ${hasUnread ? `<div class="chat-card-badge">${unreadCount}</div>` : ''}
         ${isRequest ? `<div class="request-indicator">Request</div>` : ''}
       `;
       
@@ -2764,6 +2769,9 @@ const QUICK_REACTIONS = ['🙌🏽', '👍', '❤️', '😂', '🔥', '😮', '
       if (!chat) return;
       
       state.currentChat = chatId;
+
+      // MARK CHAT AS READ WHEN OPENED
+      markChatAsRead(chatId);
       
       // Update chat view UI
       elements.currentChatInitials.textContent = getInitials(chat.name);
@@ -2784,7 +2792,6 @@ const QUICK_REACTIONS = ['🙌🏽', '👍', '❤️', '😂', '🔥', '😮', '
        elements.messageInput.disabled = false;
        elements.sendBtn.disabled = false;
        elements.messageInput.focus();
-  
       
       // Clear unread count
       chat.unread = 0;
@@ -3780,9 +3787,10 @@ if (reactionMatch) {
             needsCardUpdate = true;
             
             if (chatId !== state.currentChat) {
-              chat.unread++;
-              showNotification(message);
-            }
+  // Calculate unread count based on timestamps
+  chat.unread = calculateUnreadCount(chat);
+  showNotification(message);
+}
           }
         }
       });
@@ -3865,8 +3873,11 @@ function formatReplyForDisplay(sender, originalText, replyText) {
           type: 'individual',
           messages: requestChat.messages,
           lastActivity: requestChat.lastActivity,
-          unread: 0
+          unread: calculateUnreadCount(requestChat)
         };
+
+         // Handle new chat unread status
+    handleNewChat(sender, requestChat.messages[0]);
         
         // If we're in the request, close chat view
         if (state.currentChat === requestId) {
@@ -3940,11 +3951,18 @@ function formatReplyForDisplay(sender, originalText, replyText) {
     // Check notifications
     function checkNotifications() {
       let hasUnread = false;
-      Object.values(state.chats).forEach(chat => {
-        if (chat.unread > 0 && chat.id !== state.currentChat) {
-          hasUnread = true;
-        }
-      });
+
+        // Calculate unread counts for all chats
+  updateAllUnreadCounts();
+
+        // Check if any chat has unread messages (except current chat)
+  for (const chatId in state.chats) {
+    const chat = state.chats[chatId];
+    if (chat.unread > 0 && chatId !== state.currentChat) {
+      hasUnread = true;
+      break;
+    }
+  }
       
       document.title = hasUnread ? '(*) ChatApp' : 'ChatApp';
     }
@@ -5573,6 +5591,136 @@ function checkReactionSync() {
 
 // Call this every 30 seconds
 setInterval(checkReactionSync, 30000);
+
+// ========== UNREAD MESSAGE MANAGEMENT ==========
+
+// Get last read timestamp for a chat
+function getLastReadTimestamp(chatId) {
+  const key = `chatApp_lastRead_${chatId}`;
+  const timestamp = localStorage.getItem(key);
+  return timestamp ? parseInt(timestamp) : 0; // 0 = never read
+}
+
+// Set last read timestamp for a chat
+function setLastReadTimestamp(chatId) {
+  const key = `chatApp_lastRead_${chatId}`;
+  const timestamp = Date.now();
+  localStorage.setItem(key, timestamp.toString());
+  return timestamp;
+}
+
+// Calculate unread count for a chat
+function calculateUnreadCount(chat) {
+  if (!chat || !chat.messages || chat.messages.length === 0) {
+    return 0;
+  }
+  
+  const lastReadTimestamp = getLastReadTimestamp(chat.id);
+  const currentUser = state.currentUser;
+  
+  // Count messages from others that are newer than last read timestamp
+  let unreadCount = 0;
+  
+  for (const message of chat.messages) {
+    // Skip messages from current user
+    if (message.sender === currentUser) continue;
+    
+    // Skip reaction messages
+    if (message.isReactionMessage) continue;
+    
+    const messageTime = new Date(message.timestamp).getTime();
+    
+    // Message is unread if it's newer than last read timestamp
+    if (messageTime > lastReadTimestamp) {
+      unreadCount++;
+    }
+  }
+  
+  return unreadCount;
+}
+
+// Update all chat unread counts
+function updateAllUnreadCounts() {
+  for (const chatId in state.chats) {
+    const chat = state.chats[chatId];
+    chat.unread = calculateUnreadCount(chat);
+  }
+  renderChatCards();
+}
+
+// Mark all messages in a chat as read
+function markChatAsRead(chatId) {
+  setLastReadTimestamp(chatId);
+  const chat = state.chats[chatId];
+  if (chat) {
+    chat.unread = 0;
+  }
+  
+  // Update UI
+  document.querySelectorAll(`.chat-card[data-chat-id="${chatId}"]`).forEach(card => {
+    card.classList.remove('has-unread');
+    const badge = card.querySelector('.chat-card-badge');
+    if (badge) badge.remove();
+  });
+  
+  updateRequestsBadge();
+  checkNotifications();
+}
+
+// Handle new chat creation (for message requests, new contacts, etc.)
+function handleNewChat(chatId, initialMessage = null) {
+  const chat = state.chats[chatId];
+  if (!chat) return;
+  
+  // For new chats, set last read timestamp to before the first message
+  if (initialMessage && initialMessage.timestamp) {
+    const messageTime = new Date(initialMessage.timestamp).getTime();
+    // Set last read to 1 second before the message
+    const key = `chatApp_lastRead_${chatId}`;
+    localStorage.setItem(key, (messageTime - 1000).toString());
+  } else {
+    // For completely new chats with no messages yet, mark as read
+    setLastReadTimestamp(chatId);
+  }
+  
+  // Calculate unread count
+  chat.unread = calculateUnreadCount(chat);
+  
+  // Update UI
+  renderChatCards();
+}
+
+// Mark all chats as read
+function markAllAsRead() {
+  for (const chatId in state.chats) {
+    markChatAsRead(chatId);
+  }
+  
+  showToast('All messages marked as read', 'success');
+  updateAllUnreadCounts();
+}
+
+// Add to UI (optional - add a button somewhere)
+function addMarkAllReadButton() {
+  const button = document.createElement('button');
+  button.innerHTML = '<i class="fas fa-check-double"></i> Mark All Read';
+  button.style.position = 'fixed';
+  button.style.bottom = '20px';
+  button.style.right = '20px';
+  button.style.zIndex = '999';
+  button.style.padding = '10px 15px';
+  button.style.background = 'var(--primary-color)';
+  button.style.color = 'white';
+  button.style.border = 'none';
+  button.style.borderRadius = '20px';
+  button.style.cursor = 'pointer';
+  button.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
+  button.onclick = markAllAsRead;
+  document.body.appendChild(button);
+}
+
+// Call in initializeApp()
+// addMarkAllReadButton(); // Uncomment if you want this button
   </script>
 </body>
 </html>
