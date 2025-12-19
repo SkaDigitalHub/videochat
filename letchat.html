@@ -3379,24 +3379,32 @@ function closeUsernameOptions() {
     }
 
     // Format date
-    function formatDate(dateString) {
-      if (!dateString) return '';
-      const date = new Date(dateString);
-      const now = new Date();
-      const diff = now - date;
-      
-      if (diff < 86400000) {
-        return 'Today';
-      } else if (diff < 172800000) {
-        return 'Yesterday';
-      } else {
-        return date.toLocaleDateString('en-US', { 
-          month: 'short', 
-          day: 'numeric',
-          year: now.getFullYear() !== date.getFullYear() ? 'numeric' : undefined
-        });
-      }
-    }
+function formatDate(dateString) {
+  if (!dateString) return '';
+  
+  const messageDate = new Date(dateString);
+  const today = new Date();
+  
+  // Reset times to compare only dates
+  const messageDay = new Date(messageDate.getFullYear(), messageDate.getMonth(), messageDate.getDate());
+  const todayDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const yesterdayDay = new Date(todayDay);
+  yesterdayDay.setDate(yesterdayDay.getDate() - 1);
+  
+  // Compare dates (ignoring time)
+  if (messageDay.getTime() === todayDay.getTime()) {
+    return 'Today';
+  } else if (messageDay.getTime() === yesterdayDay.getTime()) {
+    return 'Yesterday';
+  } else {
+    // More than 2 days ago
+    return messageDate.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      year: today.getFullYear() !== messageDate.getFullYear() ? 'numeric' : undefined
+    });
+  }
+}
 
     // Format message time
     function formatMessageTime(dateString) {
