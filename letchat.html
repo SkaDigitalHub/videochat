@@ -3417,30 +3417,69 @@ function formatDate(dateString) {
       });
     }
 
-    // Format time
-    function formatTime(dateString) {
-      if (!dateString) return '';
-      const date = new Date(dateString);
-      const now = new Date();
-      const diff = now - date;
-      
-      if (diff < 60000) {
-        return 'Just now';
-      } else if (diff < 3600000) {
-        return Math.floor(diff / 60000) + 'm ago';
-      } else if (diff < 86400000) {
-        return date.toLocaleTimeString('en-US', { 
-          hour: 'numeric', 
-          minute: '2-digit',
-          hour12: true 
-        });
-      } else {
-        return date.toLocaleDateString('en-US', { 
-          month: 'short', 
-          day: 'numeric' 
-        });
-      }
+    // Format time for chat cards (uses calendar days, not 24-hour periods)
+function formatTime(dateString) {
+  if (!dateString) return '';
+  
+  const messageDate = new Date(dateString);
+  const now = new Date();
+  
+  // Get calendar dates (ignoring time)
+  const messageDay = new Date(messageDate.getFullYear(), messageDate.getMonth(), messageDate.getDate());
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  
+  // Calculate time difference in minutes
+  const diffMinutes = Math.floor((now - messageDate) / (1000 * 60));
+  const diffHours = Math.floor(diffMinutes / 60);
+  const diffDays = Math.floor(diffMinutes / (60 * 24));
+  
+  // Check if same calendar day (Today)
+  if (messageDay.getTime() === today.getTime()) {
+    // Today - show relative time or exact time
+    if (diffMinutes < 1) {
+      return 'Just now';
+    } else if (diffMinutes < 60) {
+      return `${diffMinutes}m ago`;
+    } else if (diffHours < 24) {
+      // Show time in 12-hour format
+      return messageDate.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      });
     }
+  }
+  
+  // Check if yesterday
+  if (messageDay.getTime() === yesterday.getTime()) {
+    return 'Yesterday';
+  }
+  
+  // Check if within last 6 days (show weekday)
+  if (diffDays < 7) {
+    const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return weekdays[messageDate.getDay()];
+  }
+  
+  // More than a week ago - show date
+  // Check if same year
+  if (messageDate.getFullYear() === now.getFullYear()) {
+    // Same year: show month and day
+    return messageDate.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric'
+    });
+  } else {
+    // Different year: show full date
+    return messageDate.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  }
+}
 
     // Scroll to bottom
     function scrollToBottom() {
