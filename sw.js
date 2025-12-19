@@ -41,8 +41,8 @@ self.addEventListener('notificationclick', (event) => {
 function showNotification(data) {
   const options = {
     body: data.body || 'New message',
-    icon: '/icon.png',
-    badge: '/badge.png',
+    icon: '/videochat/icon.png',
+    badge: '/videochat/badge.png',
     vibrate: [200, 100, 200],
     data: {
       url: data.url || '/',
